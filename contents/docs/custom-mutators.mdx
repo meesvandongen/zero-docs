@@ -137,15 +137,57 @@ If the server detects that the mutation is spammy, the client will see the error
 
 ### Life of a Mutation
 
-Now that we understand what client and server mutations are, let's walk through they work together with Zero to sync changes from a source client to the server and then other clients:
+Now that we understand what client and server mutations are, let's walk through
+they work together with Zero to sync changes from a source client to the server
+and then other clients:
 
-1. When you call a custom mutator on the client, Zero runs your client-side mutator immediately on the local device, updating all active queries instantly.
-2. In the background, Zero then sends a _mutation_ (a record of the mutator having run with certain arguments) to your server's push endpoint.
-3. Your push endpoint runs the [push protocol](#custom-push-implementation), executing the server-side mutator in a transaction against your database and recording the fact that the mutation ran.
+1. When you call a custom mutator on the client, Zero runs your client-side
+   mutator immediately on the local device, updating all active queries
+   instantly.
+2. In the background, Zero then sends a _mutation_ (a record of the mutator
+   having run with certain arguments) to your server's push endpoint.
+3. Your push endpoint runs the [push protocol](#custom-push-implementation),
+   executing the server-side mutator in a transaction against your database and
+   recording the fact that the mutation ran.
 4. The changes to the database are replicated to `zero-cache` as normal.
-5. `zero-cache` calculates the updates to active queries and sends rows that have changed to each client. It also sends information about the mutations that have been applied to the database.
-6. Clients receive row updates and apply them to their local cache. Any pending mutations which have been applied to the server have their local effects rolled back.
+5. `zero-cache` calculates the updates to active queries and sends rows that
+   have changed to each client. It also sends information about the mutations
+   that have been applied to the database.
+6. Clients receive row updates and apply them to their local cache. Any pending
+   mutations which have been applied to the server have their local effects
+   rolled back.
 7. Client-side queries are updated and the user sees the changes.
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant ZeroCache as zero-cache
+    participant Server as Your Server
+    participant DB as Database
+
+    Client->>Client: Call custom mutator
+    Note over Client: 1. Run client-side mutator<br/>immediately & update queries
+
+    Client->>ZeroCache: Send mutation
+    Note over ZeroCache: 2. Record of mutator with arguments
+    
+    ZeroCache->>Server: Send mutation to push endpoint
+    Note over Server: 2. Record of mutator with arguments
+    
+    Server->>DB: Execute server-side mutator in transaction
+    Note over Server,DB: 3. Run push protocol
+    
+    DB--)ZeroCache: Replicate changes
+    Note over DB,ZeroCache: 4. Normal replication
+    
+    ZeroCache--)Client: Send row updates & mutation info
+    Note over ZeroCache,Client: 5. Calculate query updates
+    
+    Client->>Client: Apply row updates & rollback pending mutations
+    Note over Client: 6. Update local cache
+    Note over Client,Client: 7. Update client-side queries
+    
+```
 
 ## Using Custom Mutators
 

@@ -1,13 +1,15 @@
-import path from 'path';
 import {promises as fs} from 'fs';
-import {compileMDX} from 'next-mdx-remote/rsc';
-import {page_routes, ROUTES} from './routes-config';
-import remarkGfm from 'remark-gfm';
-import rehypePrism from 'rehype-prism-plus';
-import rehypeAutolinkHeadings from 'rehype-autolink-headings';
-import rehypeSlug from 'rehype-slug';
-import rehypeCodeTitles from 'rehype-code-titles';
+import path from 'path';
 import rehypeAddCopyButton from '@/lib/rehype-add-copy-button';
+import {remarkMermaid} from '@theguild/remark-mermaid';
+import {Mermaid} from '@theguild/remark-mermaid/mermaid';
+import {compileMDX} from 'next-mdx-remote/rsc';
+import rehypeAutolinkHeadings from 'rehype-autolink-headings';
+import rehypeCodeTitles from 'rehype-code-titles';
+import rehypePrism from 'rehype-prism-plus';
+import rehypeSlug from 'rehype-slug';
+import remarkGfm from 'remark-gfm';
+import {page_routes} from './routes-config';
 
 // Custom components for MDX
 import Note from '@/components/note';
@@ -20,6 +22,7 @@ const components = {
   ImageLightbox,
   Video,
   Button,
+  Mermaid,
 };
 
 // Define the structure of the frontmatter
@@ -50,7 +53,7 @@ async function parseMdx<Frontmatter>(rawMdx: string) {
           ],
           rehypeAddCopyButton, // Adds "copy" buttons to code blocks
         ],
-        remarkPlugins: [remarkGfm], // Enables GitHub-flavored markdown
+        remarkPlugins: [remarkGfm, remarkMermaid], // Enables GitHub-flavored markdown
       },
     },
     components,
